@@ -1,0 +1,9 @@
+{
+  "clases": [
+    "moho_foliar",
+    "sanas",
+    "tizon_temprano",
+    "TYLCV"
+  ],
+  "img_size": 224
+}
