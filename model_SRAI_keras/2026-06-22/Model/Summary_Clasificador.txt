@@ -1,0 +1,77 @@
+Model: "model"
+_________________________________________________________________
+ Layer (type)                Output Shape              Param #   
+=================================================================
+ InDis (InputLayer)          [(None, 256, 256, 3)]     0         
+                                                                 
+ conv2d (Conv2D)             (None, 256, 256, 128)     18944     
+                                                                 
+ max_pooling2d (MaxPooling2  (None, 128, 128, 128)     0         
+ D)                                                              
+                                                                 
+ batch_normalization (Batch  (None, 128, 128, 128)     512       
+ Normalization)                                                  
+                                                                 
+ leaky_re_lu (LeakyReLU)     (None, 128, 128, 128)     0         
+                                                                 
+ dropout (Dropout)           (None, 128, 128, 128)     0         
+                                                                 
+ conv2d_1 (Conv2D)           (None, 128, 128, 64)      401472    
+                                                                 
+ max_pooling2d_1 (MaxPoolin  (None, 64, 64, 64)        0         
+ g2D)                                                            
+                                                                 
+ batch_normalization_1 (Bat  (None, 64, 64, 64)        256       
+ chNormalization)                                                
+                                                                 
+ leaky_re_lu_1 (LeakyReLU)   (None, 64, 64, 64)        0         
+                                                                 
+ dropout_1 (Dropout)         (None, 64, 64, 64)        0         
+                                                                 
+ conv2d_2 (Conv2D)           (None, 64, 64, 32)        51232     
+                                                                 
+ max_pooling2d_2 (MaxPoolin  (None, 32, 32, 32)        0         
+ g2D)                                                            
+                                                                 
+ batch_normalization_2 (Bat  (None, 32, 32, 32)        128       
+ chNormalization)                                                
+                                                                 
+ leaky_re_lu_2 (LeakyReLU)   (None, 32, 32, 32)        0         
+                                                                 
+ dropout_2 (Dropout)         (None, 32, 32, 32)        0         
+                                                                 
+ conv2d_3 (Conv2D)           (None, 32, 32, 10)        8010      
+                                                                 
+ max_pooling2d_3 (MaxPoolin  (None, 16, 16, 10)        0         
+ g2D)                                                            
+                                                                 
+ batch_normalization_3 (Bat  (None, 16, 16, 10)        40        
+ chNormalization)                                                
+                                                                 
+ leaky_re_lu_3 (LeakyReLU)   (None, 16, 16, 10)        0         
+                                                                 
+ dropout_3 (Dropout)         (None, 16, 16, 10)        0         
+                                                                 
+ Flatten (Flatten)           (None, 2560)              0         
+                                                                 
+ Dense_0 (Dense)             (None, 1280)              3278080   
+                                                                 
+ batch_normalization_4 (Bat  (None, 1280)              5120      
+ chNormalization)                                                
+                                                                 
+ dropout_4 (Dropout)         (None, 1280)              0         
+                                                                 
+ Dense_2 (Dense)             (None, 320)               409920    
+                                                                 
+ batch_normalization_5 (Bat  (None, 320)               1280      
+ chNormalization)                                                
+                                                                 
+ dropout_5 (Dropout)         (None, 320)               0         
+                                                                 
+ DenseOutput (Dense)         (None, 4)                 1284      
+                                                                 
+=================================================================
+Total params: 4176278 (15.93 MB)
+Trainable params: 4172610 (15.92 MB)
+Non-trainable params: 3668 (14.33 KB)
+_________________________________________________________________

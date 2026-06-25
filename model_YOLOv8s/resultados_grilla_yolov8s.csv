@@ -1,0 +1,9 @@
+nombre,epochs,lr,dropout,accuracy
+yolov8s_ep50_lr0.01_drop0.3,50,0.01,0.3,1.0
+yolov8s_ep50_lr0.01_drop0.5,50,0.01,0.5,1.0
+yolov8s_ep50_lr0.001_drop0.3,50,0.001,0.3,1.0
+yolov8s_ep50_lr0.001_drop0.5,50,0.001,0.5,1.0
+yolov8s_ep100_lr0.01_drop0.3,100,0.01,0.3,1.0
+yolov8s_ep100_lr0.01_drop0.5,100,0.01,0.5,1.0
+yolov8s_ep100_lr0.001_drop0.3,100,0.001,0.3,1.0
+yolov8s_ep100_lr0.001_drop0.5,100,0.001,0.5,1.0

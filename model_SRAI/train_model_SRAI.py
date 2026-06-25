@@ -19,26 +19,21 @@ import seaborn as sns
 import pandas as pd
 
 
-# Transformaciones
-
-transform_train = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225])
-])
-
-transform_val_test = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                         std=[0.229, 0.224, 0.225])
-])
-
-
 # Carga de datos
 
-def cargar_datos(data_dir, seed, batch_size, use_pin_memory):
+def cargar_datos(data_dir, seed, batch_size, use_pin_memory, img_size,
+                 normalize_mean, normalize_std):
+    transform_train = transforms.Compose([
+        transforms.Resize((img_size, img_size)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=normalize_mean, std=normalize_std)
+    ])
+    transform_val_test = transforms.Compose([
+        transforms.Resize((img_size, img_size)),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=normalize_mean, std=normalize_std)
+    ])
+
     train_dataset = datasets.ImageFolder(root=data_dir / "train",
                                          transform=transform_train)
     val_dataset   = datasets.ImageFolder(root=data_dir / "val",
@@ -132,11 +127,12 @@ def crear_modelo(capas_densas, dropout, activacion, seed, num_clases, device):
 # Entrenamiento con checkpoint
 
 def entrenar_modelo(modelo, train_loader, val_loader, epochs, lr,
-                    nombre_experimento, models_dir, device):
+                    nombre_experimento, models_dir, device,
+                    scheduler_patience, scheduler_factor):
     criterio    = nn.CrossEntropyLoss()
     optimizador = optim.Adam(modelo.parameters(), lr=lr)
     scheduler   = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizador, mode="min", patience=5, factor=0.5
+        optimizador, mode="min", patience=scheduler_patience, factor=scheduler_factor
     )
 
     historial = {"train_loss": [], "train_acc": [],
@@ -343,7 +339,7 @@ def evaluar_modelo(modelo, test_loader, ruta_modelo, nombre_experimento,
 # Exportar a ONNX
 
 def exportar_a_onnx(modelo, ruta_modelo_pt, nombre_experimento,
-                    export_dir, clases, img_size):
+                    export_dir, clases, img_size, opset_version):
     modelo.load_state_dict(torch.load(ruta_modelo_pt, map_location="cpu"))
     modelo.eval()
     modelo.to("cpu")
@@ -356,7 +352,7 @@ def exportar_a_onnx(modelo, ruta_modelo_pt, nombre_experimento,
         imagen_dummy,
         ruta_onnx,
         export_params=True,
-        opset_version=11,
+        opset_version=opset_version,
         dynamo=False,
         input_names=["imagen"],
         output_names=["logits"],
@@ -422,14 +418,16 @@ def correr_grilla(cfg):
         print(f"\n[{i+1}/{total}] {nombre}")
 
         train_loader, val_loader, test_loader = cargar_datos(
-            cfg["data_dir"], seed, cfg["batch_size"], cfg["use_pin_memory"]
+            cfg["data_dir"], seed, cfg["batch_size"], cfg["use_pin_memory"],
+            cfg["img_size"], cfg["normalize_mean"], cfg["normalize_std"]
         )
         modelo = crear_modelo(
             capas, dropout, activacion, seed, cfg["num_clases"], cfg["device"]
         )
         historial, ruta_modelo = entrenar_modelo(
             modelo, train_loader, val_loader, epochs, lr,
-            nombre, cfg["models_dir"], cfg["device"]
+            nombre, cfg["models_dir"], cfg["device"],
+            cfg["scheduler_patience"], cfg["scheduler_factor"]
         )
         metricas = evaluar_modelo(
             modelo, test_loader, ruta_modelo, nombre,
@@ -488,7 +486,8 @@ def correr_grilla(cfg):
         mejor["nombre"],
         cfg["export_dir"],
         cfg["clases"],
-        cfg["img_size"]
+        cfg["img_size"],
+        cfg["opset_version"]
     )
 
     print(f"\nResultados : {cfg['results_dir']}/resultados_grilla_final.csv")
@@ -534,6 +533,12 @@ if __name__ == "__main__":
     activacion_opciones = os.getenv("ACTIVACION_OPCIONES").split(",")
     seed_base           = int(os.getenv("SEED_BASE", 42))
 
+    normalize_mean     = [float(x) for x in os.getenv("IMG_NORMALIZE_MEAN", "0.485,0.456,0.406").split(",")]
+    normalize_std      = [float(x) for x in os.getenv("IMG_NORMALIZE_STD",  "0.229,0.224,0.225").split(",")]
+    scheduler_patience = int(os.getenv("LR_SCHEDULER_PATIENCE", 5))
+    scheduler_factor   = float(os.getenv("LR_SCHEDULER_FACTOR", 0.5))
+    opset_version      = int(os.getenv("ONNX_OPSET_VERSION", 11))
+
     device         = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     use_pin_memory = (device.type == "cuda")
 
@@ -553,6 +558,10 @@ if __name__ == "__main__":
     print(f"  Epocas       : {epocas_opciones}")
     print(f"  Activaciones : {activacion_opciones}")
     print(f"  Semilla base : {seed_base}")
+    print(f"  Norm. media  : {normalize_mean}")
+    print(f"  Norm. std    : {normalize_std}")
+    print(f"  Sched. pat.  : {scheduler_patience}  factor: {scheduler_factor}")
+    print(f"  ONNX opset   : {opset_version}")
 
     cfg = {
         "data_dir":            data_dir,
@@ -569,6 +578,11 @@ if __name__ == "__main__":
         "epocas_opciones":     epocas_opciones,
         "activacion_opciones": activacion_opciones,
         "seed_base":           seed_base,
+        "normalize_mean":      normalize_mean,
+        "normalize_std":       normalize_std,
+        "scheduler_patience":  scheduler_patience,
+        "scheduler_factor":    scheduler_factor,
+        "opset_version":       opset_version,
         "device":              device,
         "use_pin_memory":      use_pin_memory,
     }
